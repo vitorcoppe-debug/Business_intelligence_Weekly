@@ -1,0 +1,90 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id           String    @id @default(cuid())
+  name         String
+  username     String    @unique
+  password     String
+  role         String    @default("member")
+  avatarUrl    String?
+  totalPoints  Int       @default(0)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  tasks        Task[]
+  subTasks     SubTask[]
+}
+
+model Sprint {
+  id            String          @id @default(cuid())
+  name          String
+  goal          String?
+  startDate     DateTime
+  endDate       DateTime
+  status        String          @default("PLANNING")
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  tasks         Task[]
+  retrospective Retrospective?
+}
+
+model Retrospective {
+  id        String   @id @default(cuid())
+  sprint    Sprint   @relation(fields: [sprintId], references: [id], onDelete: Cascade)
+  sprintId  String   @unique
+  wentWell  String?
+  improve   String?
+  actions   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Label {
+  id        String   @id @default(cuid())
+  name      String
+  color     String   @default("#6366f1")
+  createdAt DateTime @default(now())
+  tasks     Task[]
+}
+
+model Task {
+  id          String    @id @default(cuid())
+  title       String
+  description String?
+  difficulty  String    @default("EASY")
+  status      String    @default("PENDING")
+  points      Int       @default(1)
+  assignedTo  User?     @relation(fields: [userId], references: [id])
+  userId      String?
+  clientName  String?
+  deadline    DateTime?
+  completedAt DateTime?
+  sprint      Sprint?   @relation(fields: [sprintId], references: [id])
+  sprintId    String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  subTasks    SubTask[]
+  labels      Label[]
+}
+
+model SubTask {
+  id          String    @id @default(cuid())
+  title       String
+  description String?
+  difficulty  String    @default("EASY")
+  status      String    @default("PENDING")
+  points      Int       @default(1)
+  task        Task      @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  taskId      String
+  assignedTo  User?     @relation(fields: [userId], references: [id])
+  userId      String?
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
