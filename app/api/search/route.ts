@@ -12,9 +12,9 @@ export async function GET(req: NextRequest) {
   const tasks = await prisma.task.findMany({
     where: {
       OR: [
-        { title:       { contains: q } },
-        { description: { contains: q } },
-        { clientName:  { contains: q } },
+        { title:       { contains: q, mode: 'insensitive' } },
+        { description: { contains: q, mode: 'insensitive' } },
+        { clientName:  { contains: q, mode: 'insensitive' } },
       ],
     },
     select: {

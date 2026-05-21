@@ -53,6 +53,10 @@ export default function MembersPage() {
   const [error, setError] = useState('')
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
 
+  // usuário logado
+  const [currentUser, setCurrentUser] = useState<{ id: string; role: string } | null>(null)
+  const isAdmin = currentUser?.role === 'admin'
+
   // avatar upload state
   const [avatarPreview, setAvatarPreview] = useState<string>('')
   const [uploading, setUploading] = useState(false)
@@ -65,7 +69,10 @@ export default function MembersPage() {
     setLoading(false)
   }, [])
 
-  useEffect(() => { fetchMembers() }, [fetchMembers])
+  useEffect(() => {
+    fetchMembers()
+    fetch('/api/profile').then(r => r.json()).then(d => setCurrentUser({ id: d.id, role: d.role }))
+  }, [fetchMembers])
 
   function openCreate() {
     setEditing(null)
@@ -166,12 +173,14 @@ export default function MembersPage() {
           <h1 className="text-3xl font-black text-white mb-1">👥 Time B.I.</h1>
           <p className="text-slate-400">Gerencie os membros do time</p>
         </div>
-        <button
-          onClick={openCreate}
-          className="flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-white transition-all hover:scale-105"
-          style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', boxShadow: '0 4px 20px rgba(99,102,241,0.3)' }}>
-          ➕ Novo Membro
-        </button>
+        {isAdmin && (
+          <button
+            onClick={openCreate}
+            className="flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-white transition-all hover:scale-105"
+            style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', boxShadow: '0 4px 20px rgba(99,102,241,0.3)' }}>
+            ➕ Novo Membro
+          </button>
+        )}
       </div>
 
       {loading ? (
@@ -205,18 +214,20 @@ export default function MembersPage() {
                 <div className="text-xs text-slate-500">pontos totais</div>
               </div>
 
-              <div className="flex gap-2">
-                <button onClick={() => openEdit(member)}
-                  className="px-3 py-2 rounded-lg text-sm font-medium transition-all hover:scale-105"
-                  style={{ background: 'rgba(99,102,241,0.1)', color: '#a5b4fc', border: '1px solid rgba(99,102,241,0.2)' }}>
-                  ✏️ Editar
-                </button>
-                <button onClick={() => setDeleteConfirm(member.id)}
-                  className="px-3 py-2 rounded-lg text-sm font-medium transition-all hover:scale-105"
-                  style={{ background: 'rgba(239,68,68,0.08)', color: '#f87171', border: '1px solid rgba(239,68,68,0.2)' }}>
-                  🗑️ Excluir
-                </button>
-              </div>
+              {isAdmin && (
+                <div className="flex gap-2">
+                  <button onClick={() => openEdit(member)}
+                    className="px-3 py-2 rounded-lg text-sm font-medium transition-all hover:scale-105"
+                    style={{ background: 'rgba(99,102,241,0.1)', color: '#a5b4fc', border: '1px solid rgba(99,102,241,0.2)' }}>
+                    ✏️ Editar
+                  </button>
+                  <button onClick={() => setDeleteConfirm(member.id)}
+                    className="px-3 py-2 rounded-lg text-sm font-medium transition-all hover:scale-105"
+                    style={{ background: 'rgba(239,68,68,0.08)', color: '#f87171', border: '1px solid rgba(239,68,68,0.2)' }}>
+                    🗑️ Excluir
+                  </button>
+                </div>
+              )}
             </div>
           ))}
 

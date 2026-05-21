@@ -18,6 +18,7 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   const session = await getSession()
   if (!session) return Response.json({ error: 'Não autorizado' }, { status: 401 })
+  if (session.role !== 'admin') return Response.json({ error: 'Acesso restrito a administradores' }, { status: 403 })
 
   const { name, username, password, role, avatarUrl } = await req.json()
 

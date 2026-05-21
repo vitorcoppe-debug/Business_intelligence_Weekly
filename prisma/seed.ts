@@ -1,11 +1,7 @@
 import { PrismaClient } from '../app/generated/prisma/client'
-import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3'
 import bcrypt from 'bcryptjs'
-import path from 'path'
 
-const dbUrl = `file:${path.join(process.cwd(), 'dev.db')}`
-const adapter = new PrismaBetterSqlite3({ url: dbUrl })
-const prisma = new PrismaClient({ adapter })
+const prisma = new PrismaClient()
 
 async function main() {
   console.log('🌱 Seeding database...')
@@ -14,7 +10,7 @@ async function main() {
   await prisma.task.deleteMany()
   await prisma.user.deleteMany()
 
-  const password = await bcrypt.hash('admin123', 10)
+  const password   = await bcrypt.hash('admin123',  10)
   const memberPass = await bcrypt.hash('member123', 10)
 
   const admin = await prisma.user.create({
@@ -121,9 +117,9 @@ async function main() {
   })
 
   await prisma.user.update({ where: { id: alice.id }, data: { totalPoints: 5 + 1 + 1 + 3 + 3 } })
-  await prisma.user.update({ where: { id: bob.id }, data: { totalPoints: 1 + 3 } })
+  await prisma.user.update({ where: { id: bob.id },   data: { totalPoints: 1 + 3 } })
   await prisma.user.update({ where: { id: carol.id }, data: { totalPoints: 3 + 1 + 3 } })
-  await prisma.user.update({ where: { id: dan.id }, data: { totalPoints: 0 } })
+  await prisma.user.update({ where: { id: dan.id },   data: { totalPoints: 0 } })
   await prisma.user.update({ where: { id: admin.id }, data: { totalPoints: 0 } })
 
   console.log('✅ Seed concluído!')

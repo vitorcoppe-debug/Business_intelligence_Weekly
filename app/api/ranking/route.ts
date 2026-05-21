@@ -11,13 +11,25 @@ export async function GET(req: NextRequest) {
 
   const now = new Date()
   let startDate: Date
+  let endDate: Date | undefined
 
   if (filter === 'quarter') {
     const quarter = Math.floor(now.getMonth() / 3)
     startDate = new Date(now.getFullYear(), quarter * 3, 1)
+  } else if (/^\d{4}-\d{2}$/.test(filter)) {
+    // formato YYYY-MM → mês específico
+    const [year, month] = filter.split('-').map(Number)
+    startDate = new Date(year, month - 1, 1)
+    endDate   = new Date(year, month,     1) // primeiro dia do mês seguinte
   } else {
+    // padrão: mês atual
     startDate = new Date(now.getFullYear(), now.getMonth(), 1)
+    endDate   = new Date(now.getFullYear(), now.getMonth() + 1, 1)
   }
+
+  const completedAtFilter = endDate
+    ? { gte: startDate, lt: endDate }
+    : { gte: startDate }
 
   const users = await prisma.user.findMany({
     select: { id: true, name: true, username: true, totalPoints: true, avatarUrl: true },
@@ -28,7 +40,7 @@ export async function GET(req: NextRequest) {
     by: ['userId'],
     where: {
       status: 'DONE',
-      completedAt: { gte: startDate },
+      completedAt: completedAtFilter,
       userId: { not: null },
     },
     _sum: { points: true },
@@ -38,7 +50,7 @@ export async function GET(req: NextRequest) {
     by: ['userId'],
     where: {
       status: 'DONE',
-      completedAt: { gte: startDate },
+      completedAt: completedAtFilter,
       userId: { not: null },
     },
     _sum: { points: true },

@@ -63,17 +63,27 @@ const FILTER_LABELS: Record<string, string> = {
   quarter: 'Trimestre Atual',
 }
 
+const MONTHS = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']
+
 export default function DashboardPage() {
-  const [filter, setFilter] = useState<'month' | 'quarter'>('month')
+  const now = new Date()
+  const [mode,         setMode]         = useState<'month' | 'quarter'>('month')
+  const [selectedYear, setSelectedYear] = useState(now.getFullYear())
+  const [selectedMonth,setSelectedMonth]= useState(now.getMonth()) // 0-indexed
   const [ranking, setRanking] = useState<RankedUser[]>([])
   const [sprints, setSprints] = useState<SprintVelocity[]>([])
   const [loading, setLoading] = useState(true)
+
+  // monta o parâmetro de filtro para a API
+  const filterParam = mode === 'quarter'
+    ? 'quarter'
+    : `${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}`
 
   const fetchRanking = useCallback(async () => {
     setLoading(true)
     try {
       const [rankRes, sprintRes] = await Promise.all([
-        fetch(`/api/ranking?filter=${filter}`),
+        fetch(`/api/ranking?filter=${filterParam}`),
         fetch('/api/sprints'),
       ])
       const [rankData, sprintData] = await Promise.all([rankRes.json(), sprintRes.json()])
@@ -82,11 +92,24 @@ export default function DashboardPage() {
     } finally {
       setLoading(false)
     }
-  }, [filter])
+  }, [filterParam])
 
   useEffect(() => { fetchRanking() }, [fetchRanking])
 
   const maxPoints = Math.max(...ranking.map(u => u.periodPoints), 1)
+
+  // navegação de mês
+  function prevMonth() {
+    if (selectedMonth === 0) { setSelectedMonth(11); setSelectedYear(y => y - 1) }
+    else setSelectedMonth(m => m - 1)
+  }
+  function nextMonth() {
+    const isCurrentMonth = selectedYear === now.getFullYear() && selectedMonth === now.getMonth()
+    if (isCurrentMonth) return // não vai além do mês atual
+    if (selectedMonth === 11) { setSelectedMonth(0); setSelectedYear(y => y + 1) }
+    else setSelectedMonth(m => m + 1)
+  }
+  const isCurrentMonth = selectedYear === now.getFullYear() && selectedMonth === now.getMonth()
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -96,23 +119,57 @@ export default function DashboardPage() {
         </h1>
       </div>
 
-      <div className="flex gap-3 mb-8">
-        {(['month', 'quarter'] as const).map(f => (
+      {/* ── Filtros ── */}
+      <div className="flex flex-wrap items-center gap-3 mb-8">
+
+        {/* Seletor de mês */}
+        <div
+          className="flex items-center rounded-xl overflow-hidden"
+          style={{
+            background: mode === 'month' ? 'linear-gradient(135deg, rgba(99,102,241,0.2), rgba(139,92,246,0.2))' : 'rgba(255,255,255,0.05)',
+            border: mode === 'month' ? '1px solid rgba(99,102,241,0.4)' : '1px solid rgba(255,255,255,0.08)',
+          }}>
+
+          {/* ‹ mês anterior */}
           <button
-            key={f}
-            onClick={() => setFilter(f)}
-            className="px-5 py-2 rounded-xl text-sm font-bold transition-all"
-            style={{
-              background: filter === f
-                ? 'linear-gradient(135deg, #6366f1, #8b5cf6)'
-                : 'rgba(255,255,255,0.05)',
-              color: filter === f ? '#fff' : '#64748b',
-              border: filter === f ? '1px solid rgba(99,102,241,0.5)' : '1px solid rgba(255,255,255,0.08)',
-              boxShadow: filter === f ? '0 4px 15px rgba(99,102,241,0.3)' : 'none',
-            }}>
-            {FILTER_LABELS[f]}
+            onClick={() => { setMode('month'); prevMonth() }}
+            className="px-3 py-2 text-lg leading-none hover:text-white transition-colors"
+            style={{ color: '#94a3b8' }}
+            title="Mês anterior">
+            ‹
           </button>
-        ))}
+
+          {/* label do mês — clicar ativa o modo mês */}
+          <button
+            onClick={() => setMode('month')}
+            className="px-2 py-2 text-sm font-bold min-w-[130px] text-center transition-colors"
+            style={{ color: mode === 'month' ? '#fff' : '#64748b' }}>
+            {MONTHS[selectedMonth]} {selectedYear}
+          </button>
+
+          {/* › próximo mês (desabilitado no mês atual) */}
+          <button
+            onClick={() => { setMode('month'); nextMonth() }}
+            disabled={isCurrentMonth}
+            className="px-3 py-2 text-lg leading-none transition-colors disabled:cursor-not-allowed"
+            style={{ color: isCurrentMonth ? '#1e293b' : '#94a3b8' }}
+            title="Próximo mês">
+            ›
+          </button>
+        </div>
+
+        {/* Trimestre */}
+        <button
+          onClick={() => setMode('quarter')}
+          className="px-5 py-2 rounded-xl text-sm font-bold transition-all"
+          style={{
+            background: mode === 'quarter' ? 'linear-gradient(135deg, #6366f1, #8b5cf6)' : 'rgba(255,255,255,0.05)',
+            color:  mode === 'quarter' ? '#fff' : '#64748b',
+            border: mode === 'quarter' ? '1px solid rgba(99,102,241,0.5)' : '1px solid rgba(255,255,255,0.08)',
+            boxShadow: mode === 'quarter' ? '0 4px 15px rgba(99,102,241,0.3)' : 'none',
+          }}>
+          Trimestre Atual
+        </button>
       </div>
 
       {loading ? (

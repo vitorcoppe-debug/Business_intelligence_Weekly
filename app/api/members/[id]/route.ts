@@ -22,7 +22,16 @@ export async function PUT(req: NextRequest, ctx: RouteContext<'/api/members/[id]
   if (!session) return Response.json({ error: 'Não autorizado' }, { status: 401 })
 
   const { id } = await ctx.params
+
+  // Apenas admin pode editar qualquer membro; membro só pode editar a si mesmo
+  if (session.role !== 'admin' && session.userId !== id)
+    return Response.json({ error: 'Acesso negado' }, { status: 403 })
+
   const { name, username, password, role, avatarUrl } = await req.json()
+
+  // Membro comum não pode alterar o próprio role
+  if (session.role !== 'admin' && role !== undefined)
+    return Response.json({ error: 'Apenas administradores podem alterar o papel' }, { status: 403 })
 
   const data: Record<string, unknown> = {}
   if (name) data.name = name
@@ -46,6 +55,7 @@ export async function PUT(req: NextRequest, ctx: RouteContext<'/api/members/[id]
 export async function DELETE(_req: NextRequest, ctx: RouteContext<'/api/members/[id]'>) {
   const session = await getSession()
   if (!session) return Response.json({ error: 'Não autorizado' }, { status: 401 })
+  if (session.role !== 'admin') return Response.json({ error: 'Acesso restrito a administradores' }, { status: 403 })
 
   const { id } = await ctx.params
 
