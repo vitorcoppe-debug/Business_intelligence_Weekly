@@ -130,13 +130,36 @@ export default function ProfilePage() {
     setProfileMsg(null)
     const fd = new FormData()
     fd.append('file', file)
-    const res  = await fetch('/api/upload', { method: 'POST', body: fd })
-    const data = await res.json()
-    if (data.url) {
-      setAvatarUrl(data.url)
-    } else {
-      setProfileMsg({ ok: false, text: data.error || 'Erro ao enviar imagem' })
+
+    // 1. Upload to Vercel Blob
+    const uploadRes  = await fetch('/api/upload', { method: 'POST', body: fd })
+    const uploadData = await uploadRes.json()
+
+    if (!uploadData.url) {
+      setProfileMsg({ ok: false, text: uploadData.error || 'Erro ao enviar imagem' })
+      setUploading(false)
+      e.target.value = ''
+      return
     }
+
+    // 2. Auto-save avatarUrl to the database immediately
+    const newUrl = uploadData.url
+    setAvatarUrl(newUrl)
+
+    const saveRes  = await fetch('/api/profile', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, avatarUrl: newUrl }),
+    })
+    const saveData = await saveRes.json()
+
+    if (saveRes.ok) {
+      setProfile(saveData)
+      setProfileMsg({ ok: true, text: 'Avatar atualizado com sucesso!' })
+    } else {
+      setProfileMsg({ ok: false, text: saveData.error || 'Erro ao salvar avatar' })
+    }
+
     setUploading(false)
     // reset input so the same file can be re-selected
     e.target.value = ''
@@ -197,7 +220,7 @@ export default function ProfilePage() {
 
   if (!profile) return null
 
-  const isDirty = name !== profile.name || avatarUrl !== profile.avatarUrl
+  const isDirty = name !== profile.name
 
   return (
     <div className="max-w-2xl mx-auto">
@@ -298,13 +321,6 @@ export default function ProfilePage() {
             {saving ? '⏳ Salvando...' : '💾 Salvar Perfil'}
           </button>
 
-          {avatarUrl && avatarUrl !== profile.avatarUrl && !saving && (
-            <button
-              onClick={() => setAvatarUrl(profile.avatarUrl)}
-              className="px-4 py-2.5 rounded-xl text-sm font-medium text-slate-500 hover:text-slate-300 transition-colors">
-              Cancelar
-            </button>
-          )}
         </div>
       </div>
 
