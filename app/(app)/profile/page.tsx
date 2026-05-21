@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
+import { proxyBlobUrl } from '@/lib/blobUrl'
 
 interface UserProfile {
   id: string
@@ -13,10 +14,11 @@ interface UserProfile {
 }
 
 function Avatar({ avatarUrl, name, size = 80 }: { avatarUrl?: string | null; name: string; size?: number }) {
-  if (avatarUrl) {
+  const src = proxyBlobUrl(avatarUrl)
+  if (src) {
     return (
       <Image
-        src={avatarUrl}
+        src={src}
         alt={name}
         width={size}
         height={size}

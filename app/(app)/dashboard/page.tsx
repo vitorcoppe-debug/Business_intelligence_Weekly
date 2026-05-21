@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import Image from 'next/image'
+import { proxyBlobUrl } from '@/lib/blobUrl'
 
 interface SprintVelocity {
   id: string
@@ -25,10 +26,11 @@ interface RankedUser {
 }
 
 function Avatar({ avatarUrl, name, size = 40 }: { avatarUrl?: string | null; name: string; size?: number }) {
-  if (avatarUrl) {
+  const src = proxyBlobUrl(avatarUrl)
+  if (src) {
     return (
       <Image
-        src={avatarUrl}
+        src={src}
         alt={name}
         width={size}
         height={size}

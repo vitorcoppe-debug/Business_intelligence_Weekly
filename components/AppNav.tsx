@@ -4,6 +4,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
+import { proxyBlobUrl } from '@/lib/blobUrl'
 
 interface AppNavProps {
   username: string
@@ -28,10 +29,11 @@ const NAV_ITEMS = [
 ]
 
 function UserAvatar({ avatarUrl, name, size = 36 }: { avatarUrl?: string | null; name: string; size?: number }) {
-  if (avatarUrl) {
+  const src = proxyBlobUrl(avatarUrl)
+  if (src) {
     return (
       <Image
-        src={avatarUrl}
+        src={src}
         alt={name}
         width={size}
         height={size}

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import Image from 'next/image'
+import { proxyBlobUrl } from '@/lib/blobUrl'
 
 interface Member {
   id: string
@@ -18,10 +19,11 @@ const EMPTY_FORM = { name: '', username: '', password: '', role: 'member', avata
 function Avatar({
   avatarUrl, name, size = 56, className = '',
 }: { avatarUrl?: string | null; name: string; size?: number; className?: string }) {
-  if (avatarUrl) {
+  const src = proxyBlobUrl(avatarUrl)
+  if (src) {
     return (
       <Image
-        src={avatarUrl}
+        src={src}
         alt={name}
         width={size}
         height={size}
@@ -258,7 +260,7 @@ export default function MembersPage() {
                 {/* avatar preview */}
                 {avatarPreview ? (
                   <Image
-                    src={avatarPreview}
+                    src={proxyBlobUrl(avatarPreview) ?? avatarPreview}
                     alt="Avatar"
                     width={96}
                     height={96}
