@@ -1,11 +1,12 @@
 import { NextRequest } from 'next/server'
+import { get } from '@vercel/blob'
 import { getSession } from '@/lib/auth'
 
 /**
  * GET /api/avatar?url=<encoded-blob-url>
  *
- * Proxy server-side para blobs privados do Vercel Blob.
- * Autentica a requisição com BLOB_READ_WRITE_TOKEN e retorna o conteúdo da imagem.
+ * Proxy server-side para blobs do Vercel Blob (público ou privado).
+ * Usa o SDK oficial para autenticar com BLOB_READ_WRITE_TOKEN.
  */
 export async function GET(req: NextRequest) {
   // Exige sessão válida
@@ -21,23 +22,27 @@ export async function GET(req: NextRequest) {
   if (!token) return new Response('BLOB_READ_WRITE_TOKEN not configured', { status: 500 })
 
   try {
-    const res = await fetch(url, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
+    // Detecta se é blob privado ou público a partir do hostname
+    const access: 'private' | 'public' = url.includes('.private.blob.vercel-storage.com')
+      ? 'private'
+      : 'public'
 
-    if (!res.ok) return new Response('Blob not found', { status: 404 })
+    const result = await get(url, { access, token })
 
-    const contentType = res.headers.get('content-type') ?? 'image/jpeg'
-    const buffer = await res.arrayBuffer()
+    if (!result) return new Response('Blob not found', { status: 404 })
 
-    return new Response(buffer, {
+    // result.stream pode ser null em respostas 304
+    if (!result.stream) return new Response('No content', { status: 204 })
+
+    return new Response(result.stream as unknown as ReadableStream, {
       headers: {
-        'Content-Type': contentType,
-        // Cache de 1 hora no browser; não compartilhado (avatar é por-usuário)
+        'Content-Type': result.blob.contentType || 'image/jpeg',
+        // Cache de 1 hora no browser
         'Cache-Control': 'private, max-age=3600',
       },
     })
-  } catch {
+  } catch (err) {
+    console.error('[avatar proxy]', err)
     return new Response('Failed to fetch blob', { status: 502 })
   }
 }

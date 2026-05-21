@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
   const filename = `avatars/avatar-${session.userId}-${Date.now()}.${ext}`
 
   const blob = await put(filename, file, {
-    access: 'public',
+    access: 'private',
     contentType: file.type,
   })
 

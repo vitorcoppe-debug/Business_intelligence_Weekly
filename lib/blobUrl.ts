@@ -1,6 +1,7 @@
 /**
  * Transforma URLs do Vercel Blob em URLs do proxy interno.
- * Necessário quando o Blob Store está configurado como privado.
+ * Suporta blobs públicos (*.public.blob.vercel-storage.com)
+ * e privados (*.private.blob.vercel-storage.com).
  *
  * URLs locais (blob:, /) são retornadas sem modificação.
  */
