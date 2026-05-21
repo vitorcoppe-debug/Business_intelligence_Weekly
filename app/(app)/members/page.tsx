@@ -25,6 +25,7 @@ function Avatar({
         alt={name}
         width={size}
         height={size}
+        unoptimized
         className={`rounded-2xl object-cover flex-shrink-0 ${className}`}
         style={{ width: size, height: size }}
       />
@@ -261,6 +262,7 @@ export default function MembersPage() {
                     alt="Avatar"
                     width={96}
                     height={96}
+                    unoptimized
                     className="rounded-2xl object-cover"
                     style={{ width: 96, height: 96 }}
                   />

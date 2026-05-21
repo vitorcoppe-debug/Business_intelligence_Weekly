@@ -32,6 +32,7 @@ function Avatar({ avatarUrl, name, size = 40 }: { avatarUrl?: string | null; nam
         alt={name}
         width={size}
         height={size}
+        unoptimized
         className="rounded-xl object-cover flex-shrink-0"
         style={{ width: size, height: size }}
       />
