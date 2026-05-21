@@ -1,7 +1,11 @@
 import { PrismaClient } from '../app/generated/prisma/client'
+import { PrismaPg } from '@prisma/adapter-pg'
+import pg from 'pg'
 import bcrypt from 'bcryptjs'
 
-const prisma = new PrismaClient()
+const pool    = new pg.Pool({ connectionString: process.env.DATABASE_URL })
+const adapter = new PrismaPg(pool)
+const prisma  = new PrismaClient({ adapter })
 
 async function main() {
   console.log('🌱 Seeding database...')
@@ -39,10 +43,7 @@ async function main() {
     data: {
       title: 'Redesign da Landing Page',
       description: 'Atualizar o design completo da landing page com nova identidade visual',
-      difficulty: 'HARD',
-      points: 5,
-      status: 'DONE',
-      userId: alice.id,
+      difficulty: 'HARD', points: 5, status: 'DONE', userId: alice.id,
       completedAt: new Date(now.getFullYear(), now.getMonth(), 5),
     },
   })
@@ -51,10 +52,7 @@ async function main() {
     data: {
       title: 'Integração de API de Pagamento',
       description: 'Integrar Stripe para processamento de pagamentos',
-      difficulty: 'HARD',
-      points: 5,
-      status: 'IN_PROGRESS',
-      userId: bob.id,
+      difficulty: 'HARD', points: 5, status: 'IN_PROGRESS', userId: bob.id,
     },
   })
 
@@ -62,10 +60,7 @@ async function main() {
     data: {
       title: 'Relatório Mensal',
       description: 'Preparar relatório de métricas do mês',
-      difficulty: 'MEDIUM',
-      points: 3,
-      status: 'DONE',
-      userId: carol.id,
+      difficulty: 'MEDIUM', points: 3, status: 'DONE', userId: carol.id,
       completedAt: new Date(now.getFullYear(), now.getMonth(), 10),
     },
   })
@@ -74,10 +69,7 @@ async function main() {
     data: {
       title: 'Testes Automatizados',
       description: 'Escrever testes unitários para os módulos principais',
-      difficulty: 'MEDIUM',
-      points: 3,
-      status: 'PENDING',
-      userId: dan.id,
+      difficulty: 'MEDIUM', points: 3, status: 'PENDING', userId: dan.id,
     },
   })
 
@@ -85,10 +77,7 @@ async function main() {
     data: {
       title: 'Documentação Técnica',
       description: 'Atualizar documentação das APIs internas',
-      difficulty: 'EASY',
-      points: 1,
-      status: 'DONE',
-      userId: alice.id,
+      difficulty: 'EASY', points: 1, status: 'DONE', userId: alice.id,
       completedAt: new Date(now.getFullYear(), now.getMonth(), 8),
     },
   })
@@ -116,19 +105,13 @@ async function main() {
     ],
   })
 
-  await prisma.user.update({ where: { id: alice.id }, data: { totalPoints: 5 + 1 + 1 + 3 + 3 } })
-  await prisma.user.update({ where: { id: bob.id },   data: { totalPoints: 1 + 3 } })
-  await prisma.user.update({ where: { id: carol.id }, data: { totalPoints: 3 + 1 + 3 } })
-  await prisma.user.update({ where: { id: dan.id },   data: { totalPoints: 0 } })
-  await prisma.user.update({ where: { id: admin.id }, data: { totalPoints: 0 } })
+  await prisma.user.update({ where: { id: alice.id }, data: { totalPoints: 13 } })
+  await prisma.user.update({ where: { id: bob.id },   data: { totalPoints: 4  } })
+  await prisma.user.update({ where: { id: carol.id }, data: { totalPoints: 7  } })
+  await prisma.user.update({ where: { id: dan.id },   data: { totalPoints: 0  } })
+  await prisma.user.update({ where: { id: admin.id }, data: { totalPoints: 0  } })
 
   console.log('✅ Seed concluído!')
-  console.log('\n👤 Usuários criados:')
-  console.log('  admin / admin123  (role: admin)')
-  console.log('  alice / member123')
-  console.log('  bob   / member123')
-  console.log('  carol / member123')
-  console.log('  dan   / member123')
 }
 
 main()
